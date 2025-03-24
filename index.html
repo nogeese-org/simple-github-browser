@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title> File Browser</title>
+  <title>File Browser</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { font-size: 24px; }
@@ -11,15 +11,18 @@
     a { text-decoration: none; color: #0366d6; }
     a:hover { text-decoration: underline; }
     .breadcrumb { margin-bottom: 20px; }
+    .readme { border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; background-color: #f9f9f9; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- Marked.js for markdown rendering -->
 </head>
 <body>
   <h1>[Name Here] File Browser</h1>
   <div class="breadcrumb" id="breadcrumb"></div>
+  <div id="readme" class="readme" style="display: none;"></div>
   <div id="content">Loading directory contents...</div>
 
   <script>
-    const BASE_DIR = ''; // If using a catalog (like docs) change this to it's name
+    const BASE_DIR = ''; // If using a catalog (like docs) change this to its name
     const GITHUB_API = 'https://api.github.com/repos/[repo]/contents/';
     const MIRROR_URL = ''; // What's the website the files are hosted on? https://raw.githubusercontent.com/[repo]/main/ is recommended
     
@@ -58,9 +61,23 @@
       })
       .then(data => {
         const contentEl = document.getElementById('content');
+        const readmeEl = document.getElementById('readme');
         contentEl.innerHTML = '';
         const ul = document.createElement('ul');
 
+        // Check if README.md exists and load it
+        const readmeFile = data.find(item => item.name.toLowerCase() === 'readme.md');
+        if (readmeFile) {
+          const readmeUrl = readmeFile.download_url;
+          fetch(readmeUrl)
+            .then(response => response.text())
+            .then(markdown => {
+              readmeEl.innerHTML = marked(markdown); // Convert markdown to HTML
+              readmeEl.style.display = 'block'; // Show README section
+            });
+        }
+
+        // Display directory contents
         data.forEach(item => {
           const name = item.name;
           const path = item.path;
